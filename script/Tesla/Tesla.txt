@@ -1,0 +1,126 @@
+#TouhouDanmakufu
+#Title [Nishi no Raijin: Tesura no Monogatari]
+#Text [The story of one ambitious man...]
+#ScriptVersion [2]
+
+script_enemy_main {
+	let edison1 = "\script\Tesla\Edison.jpg";
+	let angle1 = 90;
+	let frame = 0;
+	
+	@Initialize{
+	SetX(GetCenterX);
+	SetY(GetClipMinY +50);
+	SetLife(10000);
+	
+	LoadGraphic(edison1);
+	SetTexture(edison1);
+	SetGraphicRect(0, 0, 100, 100);
+	TMove;
+	}
+	
+	@MainLoop{
+		SetCollisionA(GetX, GetY, 2);
+		SetCollisionB(GetX, GetY, 2);
+				
+		frame++;
+		angle1 += 7;		
+		let loopAngle = angle1 +20;
+		let windmill = -angle1;
+		
+		if (frame%3==0){ 
+			bulletShoot2(loopAngle, 5, 5, RED01);
+			loopAngle += 5;
+		}
+		
+		if (frame%15==0){
+			bulletShoot1(90, 11, 30, YELLOW01);
+		}
+		
+		if (frame == 20) {
+			homingBullet(90, 1, 5, ORANGE01);
+			loopAngle += 5;
+			frame = 0;
+		}	
+		yield;
+	}
+	
+	//bulletShoot1 creates radial fans of bullets.
+	function bulletShoot1 (let angle, let repeat, let increase, let color) {
+		let shoot = angle - (repeat-1)/2*increase;
+		loop (repeat) {
+			CreateShot01 (GetX, GetY, 1, shoot, color, 0);
+			shoot += increase;
+		}
+	}
+	
+	function bulletFan (let angle, let repeat, let increase, let color) {
+		let shoot = angle - (repeat-1)/2*increase;
+		let X = GetX - (repeat-1)*3;
+		let Y = GetY - (repeat-1)*3;
+		loop (repeat) {
+			CreateShot01 (X, Y, 1, shoot, color, 0);
+			shoot += increase;
+			X += 3;
+			Y += 3;
+		}
+	}
+	
+	function homingBullet (let angle, let repeat, let increase, let color) {
+		let shoot = angle - (repeat-1)/2*increase;
+		let X = GetX - (repeat-1)*3;
+		let Y = GetY - (repeat-1)*3;
+		loop (repeat) {
+			CreateShot01 (GetPlayerX, Y, 1, shoot, color, 0);
+			shoot += increase;
+		}
+	}
+	
+	function bulletShoot2 (let angle, let repeat, let increase, let color) {
+		let radius = 36;
+		let shoot = angle - (repeat-1)/2*increase;
+		loop (repeat) {
+			let x = GetX + radius*cos(shoot);
+			let y = GetY + radius*sin(shoot);
+			CreateShot01 (x, y, 1, shoot, color, 0);
+			shoot += increase;
+		}
+	}
+	
+	
+	function MoveToPlayer (xMove, yMove, frame, left, top, right, bottom) {
+		let x=0;
+		let y=0;
+		
+		if (GetPlayerX < GetX) {
+			if(GetX<left) {
+				x = GetX - xMove;
+			}
+		} else if (x < right) {
+			x = GetX + xMove;
+		}
+		y = GetY + yMove;
+		if (y>top) {
+			y = top;
+		} else if (bottom < y) {
+			y = bottom;
+		}
+		SetMovePosition02(x,y,frame);
+	}
+	
+	task TMove{
+		yield;
+		loop {
+			loop (120) {yield;}
+			MoveToPlayer (rand(40,80), rand(-40,40), 60, GetClipMinX+32,GetClipMinY+32,GetClipMaxX-32,GetClipMinY+160);
+		}
+	}
+	
+	@DrawLoop{
+		DrawGraphic(GetX, GetY);
+	}
+	@Finalize {
+		DeleteGraphic("edison1");
+	}
+
+}
